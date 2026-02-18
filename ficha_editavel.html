@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HERANÇA RPG — Ficha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a84c;--gold-light:#e8c97a;--gold-dark:#8a6520;--crimson:#8b1a1a;--ink:#0d0a07;--ash:#2a2218;--smoke:#1a1510;--parchment:#f5ead6;--mist:#8a9aaa;--auto:#7fb3d3;--auto-bg:rgba(41,128,185,.07)}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{font-family:'Crimson Pro',Georgia,serif;background:var(--smoke);color:var(--parchment);overflow-x:hidden}
+::-webkit-scrollbar{width:7px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:4px}
+
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:var(--ash);border:1px solid var(--gold-dark);padding:.45rem 1rem;font-family:'Fira Code',monospace;font-size:.7rem;color:var(--gold);letter-spacing:.1rem;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none}
+#toast.show{opacity:1;transform:translateY(0)}
+
+.legend{position:fixed;top:1rem;right:1rem;z-index:999;background:rgba(26,21,16,.92);border:1px solid rgba(201,168,76,.2);padding:.5rem .8rem;font-family:'Fira Code',monospace;font-size:.6rem;display:flex;flex-direction:column;gap:.3rem}
+.li{display:flex;align-items:center;gap:.45rem;color:var(--mist)}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.le{background:rgba(201,168,76,.3);border:1px solid var(--gold)}
+.la{background:rgba(41,128,185,.3);border:1px solid var(--auto)}
+
+/* INPUTS */
+input.ed,select.ed{background:rgba(201,168,76,.07);border:none;border-bottom:1px solid rgba(201,168,76,.35);color:var(--parchment);font-family:inherit;font-size:inherit;outline:none;transition:all .2s;border-radius:2px 2px 0 0;padding:.1rem .3rem}
+input.ed:hover,select.ed:hover{border-bottom-color:var(--gold);background:rgba(201,168,76,.1)}
+input.ed:focus,select.ed:focus{border-bottom-color:var(--gold-light);background:rgba(201,168,76,.14);box-shadow:0 2px 0 rgba(201,168,76,.4)}
+input.ed[type=number]{-moz-appearance:textfield;text-align:center}
+input.ed[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* AUTO */
+.auto{color:var(--auto);background:var(--auto-bg);border:1px solid rgba(41,128,185,.2);border-radius:2px;padding:.1rem .35rem;font-family:'Fira Code',monospace;font-size:.85em;cursor:default;user-select:none}
+.auto.pos{color:#4ade80;background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)}
+.auto.neg{color:#f87171;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25)}
+
+/* COVER */
+.cover{min-height:290px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:var(--ink)}
+.cover-bg{position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&q=80');background-size:cover;background-position:center 30%;filter:brightness(.18) sepia(.6)}
+.cover-ov{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 20%,var(--ink) 75%),linear-gradient(to bottom,var(--ink) 0%,transparent 25%,transparent 65%,var(--ink) 100%)}
+.cover-body{position:relative;z-index:2;text-align:center;padding:2.5rem 2rem}
+.csys{font-family:'Fira Code',monospace;font-size:.65rem;letter-spacing:.5rem;color:var(--gold);opacity:.65;text-transform:uppercase;margin-bottom:1rem}
+.cname{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:clamp(2.5rem,10vw,5.5rem);color:var(--gold-light);line-height:1;text-shadow:0 0 60px rgba(201,168,76,.4),0 4px 20px rgba(0,0,0,.9)}
+.cname input{background:transparent;border:none;border-bottom:2px solid rgba(201,168,76,.3);color:var(--gold-light);font-family:'Cinzel Decorative',serif;font-weight:900;font-size:1em;text-align:center;outline:none;width:100%;max-width:600px;transition:border-color .2s}
+.cname input:focus{border-bottom-color:var(--gold-light)}
+.cdiv{width:220px;height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:1.2rem auto}
+.cstats{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
+.cst{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.18rem;color:var(--parchment);opacity:.6;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:.12rem}
+.cst input{background:transparent;border:none;border-bottom:1px solid rgba(201,168,76,.25);color:var(--gold-light);font-family:'Cinzel Decorative',serif;font-size:1.05rem;font-weight:700;text-align:center;outline:none;width:60px;transition:border-color .2s;-moz-appearance:textfield}
+.cst input::-webkit-inner-spin-button{-webkit-appearance:none}
+.cst input:focus{border-bottom-color:var(--gold)}
+.cstv{color:var(--auto);font-family:'Cinzel Decorative',serif;font-size:1.05rem;font-weight:700}
+
+/* LAYOUT */
+.page{max-width:1280px;margin:0 auto;padding:2rem 1.5rem 5rem;display:grid;gap:1.5rem}
+.g3{display:grid;grid-template-columns:270px 1fr 1fr;gap:1.5rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.g3,.g2{grid-template-columns:1fr}}
+
+/* PANEL */
+.panel{background:var(--ash);border:1px solid rgba(201,168,76,.2);overflow:hidden}
+.phd{background:linear-gradient(135deg,var(--crimson) 0%,#3a0808 100%);padding:.5rem 1.1rem;display:flex;align-items:center;gap:.6rem;border-bottom:2px solid var(--gold-dark)}
+.phd h2{font-family:'Cinzel',serif;font-size:.76rem;letter-spacing:.2rem;color:var(--gold-light);text-transform:uppercase}
+.pbd{padding:1.1rem}
+
+/* ATTRS */
+.attr-list{display:flex;flex-direction:column;gap:.4rem}
+.attr-row{display:grid;grid-template-columns:52px 58px 50px 1fr;align-items:center;gap:.4rem;padding:.4rem .55rem;border:1px solid rgba(201,168,76,.1);background:rgba(0,0,0,.2);transition:background .2s}
+.attr-row:hover{background:rgba(201,168,76,.05)}
+.attr-abbr{font-family:'Cinzel Decorative',serif;font-size:.85rem;color:var(--gold-light);font-weight:700}
+.avw{background:rgba(0,0,0,.4);border:1px solid rgba(201,168,76,.2);border-radius:2px;padding:.1rem}
+.avw input{background:transparent;border:none;color:var(--parchment);font-family:'Fira Code',monospace;font-size:1.2rem;text-align:center;outline:none;width:100%;-moz-appearance:textfield}
+.avw input::-webkit-inner-spin-button{-webkit-appearance:none}
+.avw:focus-within{border-color:var(--gold);background:rgba(201,168,76,.08)}
+.attr-ma{text-align:center;min-width:38px}
+.bar-track{width:100%;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(to right,var(--gold-dark),var(--gold));transition:width .4s}
+
+/* MINI */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-top:.85rem}
+.mini{background:rgba(0,0,0,.35);border:1px solid rgba(201,168,76,.12);padding:.5rem .4rem;text-align:center}
+.mlbl{font-family:'Fira Code',monospace;font-size:.55rem;color:var(--gold-dark);text-transform:uppercase;letter-spacing:.08rem;display:block;margin-bottom:.12rem}
+.mval{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-light);display:block;line-height:1}
+
+/* RECURSOS */
+.rlist{display:flex;flex-direction:column;gap:.8rem}
+.rtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:.22rem}
+.rlbl{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.12rem;color:var(--gold);text-transform:uppercase}
+.rnums{font-family:'Fira Code',monospace;font-size:.8rem;display:flex;align-items:center;gap:.3rem}
+.rnums input{background:transparent;border:none;border-bottom:1px solid rgba(201,168,76,.35);color:var(--parchment);font-family:'Fira Code',monospace;font-size:.8rem;text-align:center;outline:none;width:40px;-moz-appearance:textfield;transition:border-color .15s}
+.rnums input::-webkit-inner-spin-button{-webkit-appearance:none}
+.rnums input:focus{border-bottom-color:var(--gold)}
+.rtrack{height:16px;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.12);border-radius:2px;overflow:hidden}
+.rfill{height:100%;border-radius:2px;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-family:'Fira Code',monospace;font-size:.6rem;color:rgba(255,255,255,.6)}
+.fhp{background:linear-gradient(to right,#5a0808,#c0392b)}
+.fmana{background:linear-gradient(to right,#0a2a55,#2980b9)}
+.fexst{background:linear-gradient(to right,#2a1a08,#c97a1a)}
+.fperf{background:linear-gradient(to right,#1a0a3a,#7b5ea7)}
+
+/* DEFESAS */
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.di{background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.1);padding:.6rem .8rem;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s}
+.di:hover{border-color:rgba(201,168,76,.3)}
+.dn{font-family:'Cinzel',serif;font-size:.7rem;color:var(--mist);letter-spacing:.04rem}
+.dv{font-family:'Cinzel Decorative',serif;font-size:1.35rem;color:var(--gold-light);line-height:1}
+
+/* ACTION */
+.ac{background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.1);padding:.55rem .9rem;display:grid;grid-template-columns:1fr auto;align-items:center;gap:.4rem;margin-bottom:.4rem;transition:border-color .2s}
+.ac:hover{border-color:rgba(201,168,76,.25)}
+.an{font-family:'Cinzel',serif;font-size:.76rem;color:var(--gold);display:block}
+.ad{font-size:.76rem;opacity:.7;margin-top:.1rem}
+.acp{font-family:'Fira Code',monospace;font-size:.64rem;color:var(--gold-dark);text-align:right;white-space:nowrap}
+
+/* TABLES */
+.tw{overflow-x:auto;margin:.5rem 0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead tr{background:linear-gradient(135deg,rgba(139,26,26,.65) 0%,rgba(42,34,24,.9) 100%)}
+thead th{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.1rem;color:var(--gold-light);padding:.5rem .7rem;text-align:left;text-transform:uppercase;border-bottom:1px solid var(--gold-dark);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(201,168,76,.07);transition:background .15s}
+tbody tr:nth-child(even){background:rgba(201,168,76,.03)}
+tbody tr:hover{background:rgba(201,168,76,.07)}
+tbody td{padding:.42rem .7rem;vertical-align:middle;font-size:.85rem}
+tbody td:first-child{font-family:'Cinzel',serif;font-size:.76rem;color:var(--gold);font-weight:600}
+td input.ed{font-size:.82rem;width:100%;min-width:40px}
+
+/* SPELL ROW */
+.sr{background:rgba(0,0,0,.28);border:1px solid rgba(201,168,76,.12);border-left:3px solid var(--crimson);padding:.5rem .85rem;margin-bottom:.35rem;display:grid;grid-template-columns:1.5fr 1fr 80px auto;align-items:center;gap:.5rem;transition:border-color .2s}
+.sr:hover{border-color:rgba(201,168,76,.25)}
+.srem{background:transparent;border:none;color:var(--crimson);cursor:pointer;font-size:1rem;padding:0 .2rem;opacity:.4;transition:opacity .2s}
+.srem:hover{opacity:1}
+.sbadge{font-family:'Fira Code',monospace;font-size:.62rem;padding:.1rem .4rem;border:1px solid var(--gold-dark);color:var(--gold);display:inline-flex;align-items:center;gap:2px}
+.sbadge input{background:transparent;border:none;color:var(--gold);font-family:'Fira Code',monospace;font-size:.62rem;width:16px;text-align:center;outline:none}
+.addbtn{background:transparent;border:1px dashed rgba(201,168,76,.22);width:100%;padding:.45rem;font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.15rem;color:var(--gold-dark);cursor:pointer;text-transform:uppercase;transition:all .2s;margin-top:.3rem}
+.addbtn:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.05)}
+
+/* SLOTS */
+.slot-sect{background:rgba(0,0,0,.2);border:1px solid rgba(201,168,76,.12);padding:.9rem}
+.sgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;margin-top:.7rem}
+.scol{text-align:center}
+.slbl{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--gold-dark);margin-bottom:.3rem;display:block}
+.scircles{display:flex;flex-direction:column;gap:3px;align-items:center}
+.sc{width:14px;height:14px;border-radius:50%;cursor:pointer;border:1px solid var(--gold-dark);transition:all .2s}
+.sc.avail{background:rgba(201,168,76,.22);border-color:var(--gold)}
+.sc.avail:hover{background:rgba(201,168,76,.5)}
+.sc.used{background:rgba(139,26,26,.5);border-color:rgba(200,60,60,.5)}
+.sc.empty{background:transparent;border-color:rgba(255,255,255,.08);cursor:default}
+
+/* EQUIP */
+.eqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem}
+@media(max-width:600px){.eqgrid{grid-template-columns:repeat(2,1fr)}}
+.eqslot{border:1px dashed rgba(201,168,76,.18);padding:.5rem .6rem;min-height:50px;display:flex;flex-direction:column;justify-content:center;transition:all .2s}
+.eqslot:hover{border-color:var(--gold-dark);background:rgba(201,168,76,.04)}
+.eqslot:focus-within{border-color:var(--gold);border-style:solid}
+.eqlbl{font-family:'Fira Code',monospace;font-size:.56rem;color:var(--gold-dark);text-transform:uppercase;letter-spacing:.08rem;display:block;margin-bottom:.2rem}
+.eqslot input{background:transparent;border:none;color:var(--parchment);font-family:'Cinzel',serif;font-size:.78rem;outline:none;width:100%}
+.eqslot input::placeholder{color:rgba(255,255,255,.15);font-style:italic;font-size:.7rem}
+
+/* XP */
+.xpwrap{margin-bottom:1rem}
+.xptop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem;font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.12rem;color:var(--gold);text-transform:uppercase}
+.xptrack{height:11px;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.12);border-radius:2px;overflow:hidden}
+.xpfill{height:100%;background:linear-gradient(to right,#0a2a14,#27ae60);transition:width .7s ease}
+
+/* PROG */
+.prog-cur{background:rgba(201,168,76,.1)!important}
+.prog-cur td{color:var(--gold-light)!important}
+.prog-done td{opacity:.4}
+
+/* SEP */
+.sep{text-align:center;padding:1rem 0;position:relative}
+.sep::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(to right,transparent,var(--gold-dark),transparent)}
+.sep span{position:relative;background:var(--smoke);padding:0 1rem;color:var(--gold);font-size:.9rem}
+
+/* IB */
+.ib{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.22);border-left:3px solid var(--gold);padding:.65rem .9rem;margin:.7rem 0}
+.ibl{font-family:'Cinzel',serif;font-size:.63rem;letter-spacing:.15rem;color:var(--gold);text-transform:uppercase;margin-bottom:.22rem}
+.ib p{font-size:.84rem;opacity:.8;margin:0;line-height:1.6}
+
+/* SUB-HD */
+.shd{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.15rem;color:var(--gold);text-transform:uppercase;margin-bottom:.55rem;margin-top:1.05rem;display:flex;align-items:center;gap:.5rem}
+.shd::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.15)}
+
+/* NOTES */
+.notes{width:100%;min-height:110px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.15);color:var(--parchment);font-family:'Crimson Pro',serif;font-size:1rem;line-height:1.7;padding:.8rem 1rem;outline:none;resize:vertical;transition:border-color .2s}
+.notes:focus{border-color:var(--gold)}
+
+footer{background:var(--ink);border-top:2px solid var(--gold-dark);padding:2rem;text-align:center}
+.fl{font-family:'Cinzel Decorative',serif;font-size:1.4rem;color:var(--gold);margin-bottom:.4rem}
+footer p{font-size:.78rem;color:var(--mist);opacity:.45}
+
+/* mana-max inline */
+.mmax-input{background:transparent;border:none;border-bottom:1px dashed rgba(41,128,185,.4);color:var(--auto);font-family:'Fira Code',monospace;font-size:.78rem;text-align:center;outline:none;width:38px;-moz-appearance:textfield}
+.mmax-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.mmax-input:focus{border-bottom-color:var(--auto)}
+</style>
+</head>
+<body>
+<div id="toast">✦ salvo</div>
+<div class="legend">
+  <div class="li"><div class="ld le"></div>editável</div>
+  <div class="li"><div class="ld la"></div>automático</div>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-bg"></div><div class="cover-ov"></div>
+  <div class="cover-body">
+    <div class="csys">✦ Herança RPG — Ficha de Personagem ✦</div>
+    <div class="cname"><input type="text" id="c-nome" value="Shay" maxlength="30" spellcheck="false"></div>
+    <div class="cdiv"></div>
+    <div class="cstats">
+      <div class="cst"><span>Nível</span><input type="number" id="c-nivel" min="1" max="20" value="3"></div>
+      <div class="cst"><span>XP</span><input type="number" id="c-xp" min="0" value="10000"></div>
+      <div class="cst"><span>PA/Turno</span><span id="c-pa" class="cstv">6</span></div>
+      <div class="cst"><span>Velocidade</span><span id="c-vel" class="cstv">9m</span></div>
+      <div class="cst"><span>Iniciativa</span><span id="c-ini" class="cstv">+0</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ROW 1 -->
+<div class="g3">
+  <!-- ATRIBUTOS -->
+  <div class="panel">
+    <div class="phd"><span>⚔</span><h2>Atributos</h2></div>
+    <div class="pbd">
+      <div class="attr-list" id="attr-list"></div>
+      <div class="mgrid">
+        <div class="mini"><span class="mlbl">Iniciativa</span><span id="mini-ini" class="mval auto">—</span></div>
+        <div class="mini"><span class="mlbl">Velocidade</span><span id="mini-vel" class="mval auto">—</span></div>
+        <div class="mini"><span class="mlbl">PA/Turno</span><span id="mini-pa" class="mval auto">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECURSOS -->
+  <div class="panel">
+    <div class="phd"><span>❤</span><h2>Recursos Vitais</h2></div>
+    <div class="pbd">
+      <div class="rlist">
+        <div class="ritem">
+          <div class="rtop">
+            <span class="rlbl">Pontos de Vida</span>
+            <div class="rnums"><input type="number" id="r-pv-cur" min="0" value="30"><span style="opacity:.4">/</span><span id="r-pv-max" class="auto">—</span></div>
+          </div>
+          <div class="rtrack"><div id="bar-hp" class="rfill fhp" style="width:100%">PV</div></div>
+        </div>
+        <div class="ritem">
+          <div class="rtop">
+            <span class="rlbl">Mana</span>
+            <div class="rnums"><input type="number" id="r-mana-cur" min="0" value="30"><span style="opacity:.4">/</span><input type="number" id="r-mana-max" class="mmax-input" value="30"></div>
+          </div>
+          <div class="rtrack"><div id="bar-mana" class="rfill fmana" style="width:100%">Mana</div></div>
+        </div>
+        <div class="ritem">
+          <div class="rtop">
+            <span class="rlbl">Exaustão</span>
+            <div class="rnums"><input type="number" id="r-exst-cur" min="0" value="0"><span style="opacity:.4">/</span><span id="r-exst-max" class="auto">—</span></div>
+          </div>
+          <div class="rtrack"><div id="bar-exst" class="rfill fexst" style="width:0%"></div></div>
+        </div>
+        <div class="ritem">
+          <div class="rtop">
+            <span class="rlbl">Performance</span>
+            <div class="rnums"><span id="r-perf" class="auto">—</span><span style="opacity:.4;font-size:.7rem"> pts</span></div>
+          </div>
+          <div class="rtrack"><div id="bar-perf" class="rfill fperf" style="width:50%">Perf</div></div>
+        </div>
+      </div>
+      <div class="ib" style="margin-top:1rem">
+        <div class="ibl">Sistema de Magia</div>
+        <p>DC das Magias: <span id="dc-mag" class="auto">—</span> &nbsp;·&nbsp; Bônus Conjuração: <span id="b-conj" class="auto">—</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEFESAS -->
+  <div class="panel">
+    <div class="phd"><span>🛡</span><h2>Defesas</h2></div>
+    <div class="pbd">
+      <div class="dgrid">
+        <div class="di"><span class="dn">Física</span><span id="def-fis" class="dv auto">—</span></div>
+        <div class="di"><span class="dn">Mágica</span><span id="def-mag" class="dv auto">—</span></div>
+        <div class="di"><span class="dn">Aérea</span><span id="def-aer" class="dv auto">—</span></div>
+        <div class="di"><span class="dn">Mental</span><span id="def-men" class="dv auto">—</span></div>
+      </div>
+      <div style="margin-top:1rem">
+        <div class="shd">Manobras Defensivas</div>
+        <div class="ac"><div><span class="an">Esquiva</span><span class="ad">+1 Exaustão</span></div><div class="acp">1 PA · Reação</div></div>
+        <div class="ac"><div><span class="an">Bloqueio</span><span class="ad">+Nível Armas · Requer Escudo</span></div><div class="acp">1 PA · Reação</div></div>
+        <div class="ac"><div><span class="an">Defesa Total</span><span class="ad">+8 todas defesas · Sem Ataques</span></div><div class="acp">6 PA · Completa</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"><span>— ✦ —</span></div>
+
+<!-- ROW 2 -->
+<div class="g2">
+  <!-- COMBATE -->
+  <div class="panel">
+    <div class="phd"><span>⚡</span><h2>Combate</h2></div>
+    <div class="pbd">
+      <div class="shd">Ataques</div>
+      <div class="tw"><table>
+        <thead><tr><th>Tipo</th><th>Bônus</th><th>Dano</th><th>Tipo Dano</th><th>Alc.</th><th>PA</th></tr></thead>
+        <tbody>
+          <tr><td>Corpo a Corpo</td><td><span id="atk-corp" class="auto">—</span></td><td>1d8+FOR</td><td>Cortante</td><td>1,5m</td><td>2</td></tr>
+          <tr><td>À Distância</td><td><span id="atk-dist" class="auto">—</span></td><td>1d8+DES</td><td>Perfurante</td><td>30m</td><td>2</td></tr>
+          <tr><td>Magia Toque</td><td><span id="atk-mag" class="auto">—</span></td><td>1d10+INT</td><td>Mágico</td><td>Toque</td><td>2</td></tr>
+        </tbody>
+      </table></div>
+      <div class="shd" style="margin-top:1.1rem">Arsenal</div>
+      <div class="tw"><table>
+        <thead><tr><th>Arma</th><th>Dano</th><th>Crítico</th><th>Alcance</th><th>Propriedades</th><th></th></tr></thead>
+        <tbody id="armas-body"></tbody>
+      </table></div>
+      <button class="addbtn" onclick="addArma()">+ Adicionar Arma</button>
+      <div class="shd" style="margin-top:1.1rem">Armadura</div>
+      <div class="tw"><table>
+        <thead><tr><th>Peça</th><th>CA</th><th>DR</th><th>Penalidade</th></tr></thead>
+        <tbody>
+          <tr><td>Armadura</td><td><input type="number" id="arm-ca" class="ed" min="0" value="0" style="width:42px"></td><td><input type="number" id="arm-dr" class="ed" min="0" value="0" style="width:42px"></td><td><input type="number" id="arm-pen" class="ed" value="0" style="width:42px"></td></tr>
+          <tr><td>Escudo</td><td><input type="number" id="esc-ca" class="ed" min="0" value="0" style="width:42px"></td><td><input type="number" id="esc-dr" class="ed" min="0" value="0" style="width:42px"></td><td><input type="number" id="esc-pen" class="ed" value="0" style="width:42px"></td></tr>
+          <tr style="border-top:1px solid var(--gold-dark)"><td style="color:var(--gold-light)!important">Total</td><td><span id="tot-ca" class="auto">0</span></td><td><span id="tot-dr" class="auto">0</span></td><td>—</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- PERICIAS -->
+  <div class="panel">
+    <div class="phd"><span>📜</span><h2>Perícias</h2></div>
+    <div class="pbd">
+      <div class="tw"><table>
+        <thead><tr><th>Perícia</th><th>Attr</th><th>Nível</th><th>Total</th></tr></thead>
+        <tbody id="skills-body"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"><span>— ✦ —</span></div>
+
+<!-- MAGIA -->
+<div class="panel">
+  <div class="phd"><span>✨</span><h2>Grimório Pessoal</h2></div>
+  <div class="pbd">
+    <div class="g2">
+      <div>
+        <div class="shd">Magias Conhecidas</div>
+        <div id="spells-list"></div>
+        <button class="addbtn" onclick="addSpell()">+ Adicionar Magia</button>
+      </div>
+      <div>
+        <div class="shd">Slots de Magia</div>
+        <div class="slot-sect">
+          <div class="sgrid" id="slot-grid"></div>
+        </div>
+        <div class="ib" style="margin-top:.7rem">
+          <div class="ibl">Legenda</div>
+          <p>
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(201,168,76,.22);border:1px solid var(--gold);margin-right:4px;vertical-align:middle"></span>Disponível&nbsp;&nbsp;
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(139,26,26,.5);border:1px solid rgba(200,60,60,.5);margin-right:4px;vertical-align:middle"></span>Usado
+            <span style="opacity:.45;font-size:.78rem"> — clique para alternar</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"><span>— ✦ —</span></div>
+
+<!-- ITENS MAGICOS -->
+<div class="panel">
+  <div class="phd"><span>💎</span><h2>Itens Mágicos</h2></div>
+  <div class="pbd">
+    <div class="eqgrid">
+      <div class="eqslot"><span class="eqlbl">Cabeça</span><input type="text" id="eq-cabeca" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Pescoço</span><input type="text" id="eq-pescoco" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Corpo</span><input type="text" id="eq-corpo" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Mãos</span><input type="text" id="eq-maos" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Anel 1</span><input type="text" id="eq-anel1" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Anel 2</span><input type="text" id="eq-anel2" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Pés</span><input type="text" id="eq-pes" placeholder="— vazio —"></div>
+      <div class="eqslot"><span class="eqlbl">Cintura</span><input type="text" id="eq-cintura" placeholder="— vazio —"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"><span>— ✦ —</span></div>
+
+<!-- PROGRESSAO -->
+<div class="panel">
+  <div class="phd"><span>⬆</span><h2>Progressão</h2></div>
+  <div class="pbd">
+    <div class="xpwrap">
+      <div class="xptop"><span>Experiência</span><span id="xp-info" style="font-family:'Fira Code',monospace;font-size:.8rem">—</span></div>
+      <div class="xptrack"><div id="xp-fill" class="xpfill" style="width:0%"></div></div>
+    </div>
+    <div class="g2">
+      <div class="tw"><table>
+        <thead><tr><th>Nível</th><th>XP Total</th><th>Ganhos</th></tr></thead>
+        <tbody id="prog-body"></tbody>
+      </table></div>
+      <div>
+        <div class="shd">Marcos de Evolução</div>
+        <div class="ac"><div><span class="an">Nível 4</span><span class="ad">+1 em qualquer atributo</span></div></div>
+        <div class="ac"><div><span class="an">Nível 5</span><span class="ad">+2 INT permanente, Magias N3</span></div></div>
+        <div class="ac"><div><span class="an">Nível 8</span><span class="ad">+1 em qualquer atributo</span></div></div>
+        <div class="ac"><div><span class="an">Nível 10</span><span class="ad">+50% Mana máxima</span></div></div>
+        <div class="ac"><div><span class="an">Nível 15</span><span class="ad">+1 PA por turno</span></div></div>
+        <div class="ac"><div><span class="an">Nível 20</span><span class="ad">Imunidade a 1 elemento</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"><span>— ✦ —</span></div>
+
+<!-- NOTAS -->
+<div class="panel">
+  <div class="phd"><span>📖</span><h2>Notas & Histórico</h2></div>
+  <div class="pbd"><textarea id="notas" class="notes" placeholder="Anotações da sessão, histórico, relações, objetivos..."></textarea></div>
+</div>
+
+</div><!-- /page -->
+<footer><div class="fl">HERANÇA</div><p>Ficha de Personagem · Sistema de RPG de Mesa Quantificado</p></footer>
+
+<script>
+const ATTRS=['FOR','DES','INT','CAR','SAB'];
+const SKILLS=[
+  {id:'atletismo',nome:'Atletismo',attr:'FOR'},{id:'luta',nome:'Luta',attr:'FOR'},
+  {id:'acrobacia',nome:'Acrobacia',attr:'DES'},{id:'furtividade',nome:'Furtividade',attr:'DES'},
+  {id:'pontaria',nome:'Pontaria',attr:'DES'},{id:'percepcao',nome:'Percepção',attr:'SAB'},
+  {id:'sobrevivencia',nome:'Sobrevivência',attr:'SAB'},{id:'medicina',nome:'Medicina',attr:'SAB'},
+  {id:'combate_mag',nome:'Combate Mágico',attr:'SAB'},{id:'investigacao',nome:'Investigação',attr:'INT'},
+  {id:'conhec_arc',nome:'Conhec. Arcano',attr:'INT'},{id:'conhec_mag',nome:'Conhec. Mágico',attr:'INT'},
+  {id:'estrategia',nome:'Estratégia',attr:'INT'},{id:'forja',nome:'Forja',attr:'INT'},
+  {id:'engenharia',nome:'Engenharia',attr:'INT'},{id:'diplomacia',nome:'Diplomacia',attr:'CAR'},
+  {id:'intimidacao',nome:'Intimidação',attr:'CAR'},{id:'lideranca',nome:'Liderança',attr:'CAR'},
+];
+const XPT=[
+  {n:1,xp:0,g:'+1 Perícia, Cantrips'},{n:2,xp:300,g:'+1 Perícia'},
+  {n:3,xp:900,g:'+1 Perícia, Magias N2'},{n:4,xp:2700,g:'+1 Perícia, +1 Atributo'},
+  {n:5,xp:6500,g:'+1 Perícia, +2 INT, Magias N3'},{n:6,xp:14000,g:'+1 Perícia'},
+  {n:7,xp:23000,g:'+1 Perícia, Magias N4'},{n:8,xp:34000,g:'+1 Perícia, +1 Atributo'},
+  {n:9,xp:48000,g:'+1 Perícia, Magias N5'},{n:10,xp:64000,g:'+1 Perícia, +50% Mana'},
+  {n:11,xp:85000,g:'+1 Perícia, Magias N6'},{n:12,xp:100000,g:'+1 Perícia, +1 Atributo'},
+  {n:13,xp:120000,g:'+1 Perícia'},{n:14,xp:145000,g:'+1 Perícia'},
+  {n:15,xp:175000,g:'+1 Perícia, +1 PA'},{n:16,xp:210000,g:'+1 Perícia, +1 Atributo'},
+  {n:17,xp:250000,g:'+1 Perícia'},{n:18,xp:300000,g:'+1 Perícia'},
+  {n:19,xp:360000,g:'+1 Perícia'},{n:20,xp:430000,g:'+1 Perícia, +1 Atributo, Imunidade'},
+];
+const SLOT_DEF={1:4,2:3,3:0,4:0,5:0,6:0};
+
+let S={
+  nome:'Shay',nivel:3,xp:10000,
+  FOR:16,DES:10,INT:10,CAR:10,SAB:10,
+  pv_cur:30,mana_max:30,mana_cur:30,exst_cur:0,
+  skills:{atletismo:0,luta:0,acrobacia:0,furtividade:0,pontaria:0,percepcao:0,sobrevivencia:0,medicina:0,combate_mag:0,investigacao:0,conhec_arc:0,conhec_mag:0,estrategia:0,forja:0,engenharia:0,diplomacia:0,intimidacao:0,lideranca:0},
+  armas:[{nome:'Espada Longa',dano:'1d8',crit:'19-20/x2',alc:'1,5m',prop:'Versátil'},{nome:'Arco Longo',dano:'1d8',crit:'20/x3',alc:'45m',prop:'Duas Mãos'},{nome:'Adaga',dano:'1d4',crit:'19-20/x2',alc:'1,5m/9m',prop:'Leve, Arremesso'}],
+  arm_ca:0,arm_dr:0,arm_pen:0,esc_ca:0,esc_dr:0,esc_pen:0,
+  spells:[{nome:'Magic Missile',nivel:'0',escola:'Evocação',tempo:'1 PA',alc:'30m',mana:'0'},{nome:'Shield',nivel:'1',escola:'Abjuração',tempo:'0 PA (Reação)',alc:'Pessoal',mana:'2'},{nome:'Cure Wounds',nivel:'1',escola:'Evocação',tempo:'2 PA',alc:'Toque',mana:'2'},{nome:'Fireball',nivel:'3',escola:'Evocação',tempo:'2 PA',alc:'45m',mana:'6'}],
+  slots:{1:[0,0,0,0],2:[0,0,0],3:[],4:[],5:[],6:[]},
+  eq:{cabeca:'',pescoco:'',corpo:'',maos:'',anel1:'',anel2:'',pes:'',cintura:''},
+  notas:'',
+};
+
+function ma(v){return Math.floor((v-10)/2)}
+function fmt(n){return(n>=0?'+':'')+n}
+function g(id){return document.getElementById(id)}
+function st(id,v){const e=g(id);if(e)e.textContent=v}
+function iv(id){return parseInt(g(id)?.value)||0}
+function setBar(id,cur,max){const e=g(id);if(!e)return;e.style.width=(max>0?Math.max(0,Math.min(100,cur/max*100)):0)+'%'}
+
+function recalc(){
+  const nivel=iv('c-nivel')||1,xp=iv('c-xp');
+  const A={};ATTRS.forEach(a=>{A[a]=iv('atr-'+a)||10});
+  const MA={};ATTRS.forEach(a=>{MA[a]=ma(A[a])});
+
+  // defesas
+  const arm_ca=iv('arm-ca'),esc_ca=iv('esc-ca');
+  st('def-fis',10+MA.FOR+arm_ca+esc_ca);
+  st('def-mag',10+MA.INT);
+  st('def-aer',10+MA.DES+nivel);
+  st('def-men',10+MA.SAB);
+
+  // recursos auto
+  const pv_max=Math.max(1,(10+MA.FOR)+(nivel-1)*Math.max(5+MA.FOR,1));
+  const exst_max=20+Math.max(0,MA.SAB*5);
+  const perf=3+MA.CAR;
+  st('r-pv-max',pv_max);st('r-exst-max',exst_max);st('r-perf',perf);
+
+  const pv_cur=Math.min(iv('r-pv-cur'),pv_max);
+  const mana_max=iv('r-mana-max');
+  const mana_cur=Math.min(iv('r-mana-cur'),mana_max);
+  const exst_cur=Math.min(iv('r-exst-cur'),exst_max);
+  setBar('bar-hp',pv_cur,pv_max);
+  setBar('bar-mana',mana_cur,mana_max);
+  setBar('bar-exst',exst_cur,exst_max);
+  setBar('bar-perf',perf,Math.max(perf+4,8));
+
+  // magia
+  st('dc-mag',10+nivel+MA.INT);
+  const bc=MA.INT+MA.SAB;const bce=g('b-conj');if(bce){bce.textContent=fmt(bc);bce.className='auto'+(bc>0?' pos':bc<0?' neg':'')}
+
+  // combate
+  const sk_luta=iv('skill-luta'),sk_pont=iv('skill-pontaria'),sk_cm=iv('skill-combate_mag');
+  const ac=sk_luta+MA.FOR;const ad=sk_pont+MA.DES;const am=sk_cm+MA.INT;
+  const ce=g('atk-corp');if(ce){ce.textContent=fmt(ac);ce.className='auto'+(ac>0?' pos':ac<0?' neg':'')}
+  const de=g('atk-dist');if(de){de.textContent=fmt(ad);de.className='auto'+(ad>0?' pos':ad<0?' neg':'')}
+  const me=g('atk-mag');if(me){me.textContent=fmt(am);me.className='auto'+(am>0?' pos':am<0?' neg':'')}
+
+  // armadura totais
+  st('tot-ca',arm_ca+esc_ca);st('tot-dr',iv('arm-dr')+iv('esc-dr'));
+
+  // vel/pa/ini
+  const vel=Math.max(9+MA.DES,3),pa=nivel>=15?7:6,ini=10+MA.DES;
+  st('c-vel',vel+'m');st('c-ini',fmt(ini));st('c-pa',pa);
+  st('mini-ini',fmt(ini));st('mini-vel',vel+'m');st('mini-pa',pa);
+
+  // attrs MA + bar
+  ATTRS.forEach(a=>{
+    const v=A[a],m=MA[a];
+    const me=g('ma-'+a);
+    if(me){me.textContent=fmt(m);me.className='attr-ma auto'+(m>0?' pos':m<0?' neg':'')}
+    const be=g('bar-'+a);
+    if(be)be.style.width=Math.max(0,Math.min(100,((v-3)/27)*100))+'%';
+  });
+
+  // skills bonus
+  SKILLS.forEach(sk=>{
+    const nv=iv('skill-'+sk.id);
+    const b=nv+MA[sk.attr];
+    const e=g('skb-'+sk.id);
+    if(e){e.textContent=fmt(b);e.className='auto'+(b>0?' pos':b<0?' neg':'')}
+  });
+
+  // xp bar
+  const cur=XPT.find(r=>r.n===nivel),nxt=XPT.find(r=>r.n===nivel+1);
+  if(cur&&nxt){
+    const pct=Math.min(100,((xp-cur.xp)/(nxt.xp-cur.xp))*100);
+    const f=g('xp-fill');if(f)f.style.width=pct.toFixed(1)+'%';
+    st('xp-info',xp.toLocaleString('pt-BR')+' / '+nxt.xp.toLocaleString('pt-BR')+' XP');
+  }else if(!nxt){st('xp-info','Nível Máximo ✦')}
+
+  // prog table highlight
+  document.querySelectorAll('#prog-body tr').forEach(tr=>{
+    const l=parseInt(tr.dataset.n);
+    tr.className=l<nivel?'prog-done':l===nivel?'prog-cur':'';
+  });
+
+  document.title='HERANÇA RPG — '+(g('c-nome')?.value||'Personagem');
+}
+
+function saveState(){
+  SKILLS.forEach(sk=>{const e=g('skill-'+sk.id);if(e)S.skills[sk.id]=iv('skill-'+sk.id)});
+  S.nome=g('c-nome')?.value||'Shay';
+  S.nivel=iv('c-nivel');S.xp=iv('c-xp');
+  ATTRS.forEach(a=>{S[a]=iv('atr-'+a)});
+  S.pv_cur=iv('r-pv-cur');S.mana_cur=iv('r-mana-cur');S.mana_max=iv('r-mana-max');S.exst_cur=iv('r-exst-cur');
+  S.arm_ca=iv('arm-ca');S.arm_dr=iv('arm-dr');S.arm_pen=iv('arm-pen');
+  S.esc_ca=iv('esc-ca');S.esc_dr=iv('esc-dr');S.esc_pen=iv('esc-pen');
+  S.notas=g('notas')?.value||'';
+  ['cabeca','pescoco','corpo','maos','anel1','anel2','pes','cintura'].forEach(k=>{S.eq[k]=g('eq-'+k)?.value||''});
+  localStorage.setItem('heranca_ficha',JSON.stringify(S));
+  const t=g('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1400);
+}
+
+let stimer=null;
+function sched(){clearTimeout(stimer);stimer=setTimeout(saveState,600)}
+
+function loadState(){
+  const raw=localStorage.getItem('heranca_ficha');
+  if(raw){try{const sv=JSON.parse(raw);S=Object.assign({},S,sv);if(!S.slots)S.slots={1:[0,0,0,0],2:[0,0,0],3:[],4:[],5:[],6:[]};if(!S.eq)S.eq={}}catch(e){}}
+}
+
+// RENDER ATTRS
+function renderAttrs(){
+  const list=g('attr-list');list.innerHTML='';
+  ATTRS.forEach(a=>{
+    const row=document.createElement('div');row.className='attr-row';
+    row.innerHTML=`<span class="attr-abbr">${a}</span><div class="avw"><input type="number" id="atr-${a}" min="3" max="30" value="${S[a]||10}"></div><span id="ma-${a}" class="attr-ma auto">+0</span><div style="flex:1"><div class="bar-track"><div id="bar-${a}" class="bar-fill" style="width:50%"></div></div></div>`;
+    list.appendChild(row);
+    g('atr-'+a).addEventListener('input',()=>{S[a]=iv('atr-'+a);recalc();sched()});
+  });
+}
+
+// RENDER SKILLS
+function renderSkills(){
+  const tb=g('skills-body');tb.innerHTML='';
+  SKILLS.forEach(sk=>{
+    const nv=S.skills[sk.id]||0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${sk.nome}</td><td style="font-family:'Fira Code',monospace;font-size:.7rem;color:var(--mist)">${sk.attr}</td><td><input type="number" id="skill-${sk.id}" class="ed" min="0" max="20" value="${nv}" style="width:48px;font-size:.82rem"></td><td style="text-align:center"><span id="skb-${sk.id}" class="auto">+0</span></td>`;
+    tb.appendChild(tr);
+    g('skill-'+sk.id).addEventListener('input',()=>{recalc();sched()});
+  });
+}
+
+// RENDER ARMAS
+function renderArmas(){
+  const tb=g('armas-body');tb.innerHTML='';
+  S.armas.forEach((arma,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="text" class="ed" data-i="${i}" data-f="nome" value="${arma.nome}" style="min-width:100px"></td><td><input type="text" class="ed" data-i="${i}" data-f="dano" value="${arma.dano}" style="width:52px"></td><td><input type="text" class="ed" data-i="${i}" data-f="crit" value="${arma.crit}" style="width:70px"></td><td><input type="text" class="ed" data-i="${i}" data-f="alc" value="${arma.alc}" style="width:58px"></td><td><input type="text" class="ed" data-i="${i}" data-f="prop" value="${arma.prop}" style="width:100px"></td><td><button class="srem" onclick="removeArma(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('input').forEach(inp=>{inp.addEventListener('input',()=>{const i=parseInt(inp.dataset.i);const f=inp.dataset.f;if(!isNaN(i)&&f){S.armas[i][f]=inp.value;sched()}})});
+}
+function addArma(){S.armas.push({nome:'Nova Arma',dano:'1d6',crit:'20/x2',alc:'1,5m',prop:''});renderArmas();sched()}
+function removeArma(i){S.armas.splice(i,1);renderArmas();sched()}
+
+// RENDER SPELLS
+function renderSpells(){
+  const cont=g('spells-list');cont.innerHTML='';
+  S.spells.forEach((sp,i)=>{
+    const div=document.createElement('div');div.className='sr';
+    div.innerHTML=`<div><input type="text" class="ed" data-i="${i}" data-f="nome" value="${sp.nome}" style="font-family:'Cinzel',serif;font-weight:600;color:var(--gold-light);font-size:.8rem;width:100%;margin-bottom:.15rem"><br><input type="text" class="ed" data-i="${i}" data-f="escola" value="${sp.escola}" style="font-size:.72rem;color:var(--mist);width:100%"></div><div style="font-size:.72rem;color:var(--mist)"><div>Tempo: <input type="text" class="ed" data-i="${i}" data-f="tempo" value="${sp.tempo}" style="width:85px;font-size:.72rem"></div><div style="margin-top:.12rem">Alcance: <input type="text" class="ed" data-i="${i}" data-f="alc" value="${sp.alc}" style="width:65px;font-size:.72rem"></div></div><div style="font-size:.72rem;color:var(--mist)">Mana: <input type="text" class="ed" data-i="${i}" data-f="mana" value="${sp.mana}" style="width:35px;font-size:.72rem"></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem"><span class="sbadge">N<input type="text" data-i="${i}" data-f="nivel" value="${sp.nivel}" style="width:14px;font-size:.62rem;font-family:'Fira Code',monospace;background:transparent;border:none;color:var(--gold);outline:none;text-align:center"></span><button class="srem" onclick="removeSpell(${i})">✕</button></div>`;
+    cont.appendChild(div);
+  });
+  cont.querySelectorAll('input[data-i]').forEach(inp=>{inp.addEventListener('input',()=>{const i=parseInt(inp.dataset.i);const f=inp.dataset.f;if(!isNaN(i)&&f){S.spells[i][f]=inp.value;sched()}})});
+}
+function addSpell(){S.spells.push({nome:'Nova Magia',nivel:'1',escola:'',tempo:'2 PA',alc:'30m',mana:'2'});renderSpells();sched()}
+function removeSpell(i){S.spells.splice(i,1);renderSpells();sched()}
+
+// RENDER SLOTS
+function renderSlots(){
+  const grid=g('slot-grid');grid.innerHTML='';
+  for(let n=1;n<=6;n++){
+    const max=SLOT_DEF[n];
+    const col=document.createElement('div');col.className='scol';
+    let circles='';
+    for(let s=0;s<4;s++){
+      if(s>=max){circles+=`<div class="sc empty"></div>`;continue}
+      const used=(S.slots[n]||[])[s]===1;
+      circles+=`<div class="sc ${used?'used':'avail'}" onclick="toggleSlot(${n},${s})"></div>`;
+    }
+    col.innerHTML=`<span class="slbl">N${n}</span><div class="scircles">${circles}</div>`;
+    grid.appendChild(col);
+  }
+}
+function toggleSlot(n,idx){if(!S.slots[n])S.slots[n]=[];S.slots[n][idx]=S.slots[n][idx]===1?0:1;renderSlots();sched()}
+
+// RENDER PROG
+function renderProg(){
+  const tb=g('prog-body');tb.innerHTML='';
+  XPT.forEach(row=>{
+    const tr=document.createElement('tr');tr.dataset.n=row.n;
+    tr.innerHTML=`<td>${row.n}</td><td>${row.xp.toLocaleString('pt-BR')}</td><td>${row.g}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// BIND SIMPLES
+function bindAll(){
+  ['c-nome','c-nivel','c-xp'].forEach(id=>{g(id)?.addEventListener('input',()=>{recalc();sched()})});
+  ['r-pv-cur','r-mana-cur','r-mana-max','r-exst-cur'].forEach(id=>{g(id)?.addEventListener('input',()=>{recalc();sched()})});
+  ['arm-ca','arm-dr','arm-pen','esc-ca','esc-dr','esc-pen'].forEach(id=>{g(id)?.addEventListener('input',()=>{recalc();sched()})});
+  ['cabeca','pescoco','corpo','maos','anel1','anel2','pes','cintura'].forEach(k=>{
+    const e=g('eq-'+k);if(e){e.value=S.eq[k]||'';e.addEventListener('input',()=>{S.eq[k]=e.value;sched()})}
+  });
+  const n=g('notas');if(n){n.value=S.notas||'';n.addEventListener('input',()=>{S.notas=n.value;sched()})}
+}
+
+function fillFromState(){
+  g('c-nome').value=S.nome||'Shay';
+  g('c-nivel').value=S.nivel||3;
+  g('c-xp').value=S.xp||10000;
+  g('r-pv-cur').value=S.pv_cur??30;
+  g('r-mana-cur').value=S.mana_cur??30;
+  g('r-mana-max').value=S.mana_max??30;
+  g('r-exst-cur').value=S.exst_cur??0;
+  g('arm-ca').value=S.arm_ca||0;g('arm-dr').value=S.arm_dr||0;g('arm-pen').value=S.arm_pen||0;
+  g('esc-ca').value=S.esc_ca||0;g('esc-dr').value=S.esc_dr||0;g('esc-pen').value=S.esc_pen||0;
+  ATTRS.forEach(a=>{const e=g('atr-'+a);if(e)e.value=S[a]||10});
+}
+
+function init(){
+  loadState();
+  renderAttrs();renderSkills();renderArmas();renderSpells();renderSlots();renderProg();
+  fillFromState();
+  bindAll();
+  recalc();
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
